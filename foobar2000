@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# set this to what's needed to run foobar.
+# for example, if you have binfmt_misc setup
+# for wine, something like this will work.
+# otherwise, "wine path-to-foobar" is what you want.
+RUN_FOOBAR2000="${RUN_FOOBAR2000:-wine ${HOME}/.wine/drive_c/Program Files/foobar2000}"
+
+canonicalise () {
+    filename="${1}"
+    # prefix replacement
+    case "${1}" in
+	/*)
+	    # absolute, nothing to do.
+	    ;;
+	~*)
+	    # home-relative and for some odd reason calling shell
+	    # didnt expand this already (for ex. it was quoted).
+	    filename="${HOME}/${filename}"
+	    ;;
+	*)
+	    # relative path.
+	    filename="$(pwd)/${filename}"
+	    ;;
+    esac
+    # strip './' elements
+    filename=$(echo "${filename}" | sed -e 's:/\./:/:g')
+    # strip 'foo/../' elements
+    filename=$(echo "${filename}" | sed -e 's:/[^/]\+/\.\./:/:g')
+    # protect real backslashes
+    filename=$(echo "${filename}" | sed -e 's/\\/\\\\/g')
+    file="${filename}"
+    unset filename
+}
+
+case "${1}" in
+    -add)
+	[[ -n ${2} ]] && canonicalise "${2}"
+	${RUN_FOOBAR2000}/foobar2000.exe /add "z:$file" & &>/dev/null
+	echo "Action: adding Directory or Files \"${file}\" to foobar2000"
+	;;
+    -addfiles)
+    	files=( "${@}" )
+	for (( i = 1 ; i < ${#} ; ++i )); do
+	    canonicalise "${files[$i]}"
+	    ${RUN_FOOBAR2000}/foobar2000.exe /add "z:${file}" & &>/dev/null
+	    echo "Action: adding $(echo ${file})"
+	done
+	echo "Result: added "$(( ${#}-1 ))" files to foobar2000"
+	;;
+    -play)
+	${RUN_FOOBAR2000}/foobar2000.exe /play & &>/dev/null
+	echo "Action: play Song in foobar2000"
+	;;
+    -pause)
+	${RUN_FOOBAR2000}/foobar2000.exe /pause & &>/dev/null
+	echo "Action: pause Song in foobar2000"
+	;;
+    -playpause)
+	${RUN_FOOBAR2000}/foobar2000.exe /playpause & &>/dev/null
+	echo "Action: play or pause Song in foobar2000"
+	;;
+    -prev)
+	${RUN_FOOBAR2000}/foobar2000.exe /prev & &>/dev/null
+	echo "Action: play previous Song in foobar2000"
+	;;
+    -next)
+	${RUN_FOOBAR2000}/foobar2000.exe /next & &>/dev/null
+	echo "Action: play next Song in foobar2000"
+	;;
+    -rand)
+	${RUN_FOOBAR2000}/foobar2000.exe /rand & &>/dev/null
+	echo "Action: play random Song in foobar2000"
+	;;
+    -stop)
+	${RUN_FOOBAR2000}/foobar2000.exe /stop & &>/dev/null
+	echo "Action: stop playing a Song in foobar2000"
+	;;
+    -mute)
+	${RUN_FOOBAR2000}/foobar2000.exe /command:Volume\ mute & &>/dev/null
+	echo "Action: mute foobar2000"
+	;;
+    -volup)
+	${RUN_FOOBAR2000}/foobar2000.exe /command:Volume\ up & &>/dev/null
+	echo "Action: raise Volume in foobar2000"
+	;;
+    -voldown)
+	${RUN_FOOBAR2000}/foobar2000.exe /command:Volume\ down & &>/dev/null
+	echo "Action: decrease Volume in foobar2000"
+	;;
+    -hide)
+	${RUN_FOOBAR2000}/foobar2000.exe /hide & &>/dev/null
+	echo "Action: hide foobar2000 window"
+	;;
+    -show)
+	${RUN_FOOBAR2000}/foobar2000.exe /show & &>/dev/null
+	echo "Action: show foobar2000 window"
+	;;
+    -exit)
+	${RUN_FOOBAR2000}/foobar2000.exe /exit & &>/dev/null
+	echo "Action: exit foobar2000"
+	;;
+    -rescan)
+	${RUN_FOOBAR2000}/foobar2000.exe /command:"Rescan Media Library" & &>/dev/null
+	echo "Action: Rescan foobar2000 Media Library"
+	;;
+    -command-*)
+	[[ -n ${1} ]] && command=${1##*command-}
+	${RUN_FOOBAR2000}/foobar2000.exe /command:"${command}" & &>/dev/null
+	echo "Action: call foobar2000 with command \"$command\""
+	;;
+    -playlist_command-*)
+	[[ -n ${1} ]] && command=${1##*command-}
+	${RUN_FOOBAR2000}/foobar2000.exe /playlist_command:"${command}" & &>/dev/null
+	echo "Action: call foobar2000 with playlist command \"$command\""
+	;;
+    -playing_command-*)
+	[[ -n ${1} ]] && command=${1##*command-}
+	${RUN_FOOBAR2000}/foobar2000.exe /playing_command:"${command}" & &>/dev/null
+	echo "Action: call foobar2000 with playing command \"$command\""
+	;;
+    -help)
+	echo "Using: foobar2000 [Command]
+
+Where Command can be on of these:
+-add -addfiles -play -pause -playpause -stop -next -prev -rand -mute -volup -voldown -hide -show -rescan -command-[fb2k command] -playlist_command-[fb2k playlist command] -playing_command-[fb2k playing command] -help"
+	;;
+    *)
+	if [[ -n ${1} ]]; then
+	    canonicalise "${1}"
+	    ${RUN_FOOBAR2000}/foobar2000.exe "z:${file}" & &>/dev/null
+	    echo "Action: start foobar2000 with file ${file}"
+	else
+	    ${RUN_FOOBAR2000}/foobar2000.exe & &>/dev/null
+	    echo "Action: start foobar2000"
+	fi
+	;;
+esac

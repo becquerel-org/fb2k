@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=foobar2000
+GenericName=Plays Music
+Version=1.0
+Encoding=UTF-8
+Terminal=false
+Exec=/usr/bin/foobar2000
+Comment=Plays Music
+Icon=foobar2000.png
+Categories=GNOME;GTK;AudioVideo;Audio;Player;
