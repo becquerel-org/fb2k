@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-# set this to what's needed to run foobar.
-# for example, if you have binfmt_misc setup
-# for wine, something like this will work.
-# otherwise, "wine path-to-foobar" is what you want.
+# set RUN_FOOBAR2000 in ~/.foobar2000.conf
+[[ -r "${HOME}"/.foobar2000.conf ]] && . "${HOME}"/.foobar2000.conf
+
 RUN_FOOBAR2000="${RUN_FOOBAR2000:-wine ${HOME}/.wine/drive_c/Program Files/foobar2000}"
 
 canonicalise () {
@@ -28,25 +27,47 @@ canonicalise () {
     # strip 'foo/../' elements
     filename=$(echo "${filename}" | sed -e 's:/[^/]\+/\.\./:/:g')
     # protect real backslashes
-    filename=$(echo "${filename}" | sed -e 's/\\/\\\\/g')
+    filename=$(echo "${filename}" | sed -e 's:\\:\\\\:g')
     file="${filename}"
     unset filename
 }
 
+get_filenames() {
+    local file
+    local -a files
+    while (( ${#} )); do
+	canonicalise "${1}"
+	if [[ -d "${file}" ]]; then
+	    files=( "${files[*]}" "$(find ${file} \! -type d)" )
+	else
+	    files=( "${files[*]}" "${file}" )
+	fi
+	shift
+    done
+    echo "${files[*]}"
+}
+
 case "${1}" in
     -add)
-	[[ -n ${2} ]] && canonicalise "${2}"
-	${RUN_FOOBAR2000}/foobar2000.exe /add "z:$file" & &>/dev/null
-	echo "Action: adding Directory or Files \"${file}\" to foobar2000"
+	shift
+	if [[ -n ${1} ]]; then
+	    canonicalise "${1}"
+	    ${RUN_FOOBAR2000}/foobar2000.exe /add "z:$file" & &>/dev/null
+	    echo "Action: adding Directory or Files \"${file}\" to foobar2000"
+	fi
 	;;
     -addfiles)
-    	files=( "${@}" )
-	for (( i = 1 ; i < ${#} ; ++i )); do
-	    canonicalise "${files[$i]}"
-	    ${RUN_FOOBAR2000}/foobar2000.exe /add "z:${file}" & &>/dev/null
-	    echo "Action: adding $(echo ${file})"
-	done
-	echo "Result: added "$(( ${#}-1 ))" files to foobar2000"
+	shift
+	if (( ${#} )); then 
+    	    files=( "$(get_filenames ${@})" )
+	    while (( ${#files[*]} )); do
+		file="${files[0]}"
+		${RUN_FOOBAR2000}/foobar2000.exe /add "z:${file}" & &>/dev/null
+		echo "Action: adding $(echo ${file})"
+		shift files
+	    done
+	    echo "Result: added "$(( ${#} ))" files to foobar2000"
+	fi
 	;;
     -play)
 	${RUN_FOOBAR2000}/foobar2000.exe /play & &>/dev/null
