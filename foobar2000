@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # set this to what's needed to run foobar.
 # for example, if you have binfmt_misc setup
