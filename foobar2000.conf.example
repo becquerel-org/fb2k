@@ -1,0 +1,10 @@
+# copy this file to ~/.foobar2000.conf and modify as needed.
+
+# You need to set this for the script to know how to run foobar2000.
+# If you have setup wine with binfmt_misc, you can just the path, like:
+#
+# RUN_FOOBAR2000="/home/${USER}/.foobar2000"
+#
+# otherwise, you'll have to prepend the path with 'wine'
+
+RUN_FOOBAR2000="wine /home/${USER}/.wine/drive_c/Program Files/foobar2000"
